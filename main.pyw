@@ -9,6 +9,7 @@ import datetime
 import casino
 import time
 # import uuid
+import config
 from config import token, ch
 
 client = discord.Client()
@@ -294,58 +295,59 @@ economyInfo = economyInfo()
 economy = economy()
 casino = casino.Casino()
 
+BOT_MODULES = ["main", "economy"]
+BOT_MESSAGES = ["/info", "/pcOff", "/help", "/off", "/on", "/setPoint", "/moduleAccess", "/punch"]
+BOT_COMMANDS = [
+    {"func": commands.info, "args": [], "module": "main"},
+    {"func": commands.pc_off, "args": [], "module": "main"},
+    {"func": commands.help, "args": [], "module": "global"},
+    {"func": commands.activity, "args": [False], "module": "main"},
+    {"func": commands.activity, "args": [True], "module": "main"},
+    {"func": commands.edit_point, "args": [], "module": "main"},
+    {"func": commands.editModuleAccess, "args": [BOT_MODULES], "module": "global"},
+    {"func": economy.punch, "args": [], "module": "economy"}
+]
+
 
 @timeEvents.event
 async def on_start():
     main.newGetInfo()
     main.newGetServersInfo()
-    print('eee')
+    main.newsave(status=False)
 
 
 @client.event
 async def on_ready():
-    main.newsave(status=False)
     channel = client.get_channel(877119061866192919)
-    # member = 'Sally Star#1482'
-    userId: int = 455990052338794497
-    await channel.send(f'<@{userId}>, компьютер включен.')
-    # client.loop.create_task()
-    print(f'bot started during {round(timeEvents.getTime(), 2)} sec')
+    await channel.send('<@455990052338794497>, компьютер включен.')
+    # print(f 'bot started during {round(timeEvents.getTime(), 2)} sec')
 
 
+async def checkMessage(message, messages, command):
+    await commands.checkServer(message)
+    serverId = message.channel.guild.id
+    userId = message.author.id
+    if (message.content.split(" ")[0]) in messages:
+        i = messages.index((message.content.split(" ")[0]))
+        command = command[i]
+        if await commands.commandAccess(message, command["module"]):
+            if command["module"] == "economy" and (await economyInfo.checkUser(serverId=serverId, userId=userId)):
+                user = await economyInfo.getUserStats(serverId=serverId, userId=userId)
+                result = await command["func"](*(command["args"]), user=user, message=message)
+                await economyInfo.editUserStats(serverId=serverId, userId=userId, money=result[0])
+            else:
+                await command["func"](*(command["args"]), message=message)
+    
+    
 @client.event
 async def on_message(message):
     
     if message.author == client.user:
         return
-    
-    modules = ["main", "economy"]
-    mes = ["/info", "/pcOff", "/help", "/off", "/on", "/setPoint", "/moduleAccess", "/punch"]
-    com = [
-        {"func": commands.info, "args": [message], "module": "main"},
-        {"func": commands.pc_off, "args": [message], "module": "main"},
-        {"func": commands.help, "args": [message], "module": "global"},
-        {"func": commands.activity, "args": [message, False], "module": "main"},
-        {"func": commands.activity, "args": [message, True], "module": "main"},
-        {"func": commands.edit_point, "args": [message], "module": "main"},
-        {"func": commands.editModuleAccess, "args": [message, modules], "module": "global"},
-        {"func": economy.punch, "args": [message], "module": "economy"}
-        ]
-    
-    if message.content.startswith("/"):
-        await commands.checkServer(message)
-        serverId = message.channel.guild.id
-        userId = message.author.id
-        if (message.content.split(" ")[0]) in mes:
-            a = mes.index((message.content.split(" ")[0]))
-            if await commands.commandAccess(message, com[a]["module"]) is True:
-                if com[a]["module"] == "economy" and (await economyInfo.checkUser(serverId=serverId, userId=userId)):
-                    user = await economyInfo.getUserStats(serverId=serverId, userId=userId)
-                    result = await com[a]["func"](*(com[a]["args"]), user=user)
-                    await economyInfo.editUserStats(serverId=serverId, userId=userId, money=result[0])
-                else:
-                    await com[a]["func"](*(com[a]["args"]))
-        
 
+    if message.content.startswith("/"):
+        await checkMessage(message=message, messages=BOT_MESSAGES, command=BOT_COMMANDS)
+    
+    
 timeEvents.run()
 client.run(token)
