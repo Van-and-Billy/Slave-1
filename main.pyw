@@ -330,7 +330,7 @@ async def on_message(message):
         {"func": commands.edit_point, "args": [message], "module": "main"},
         {"func": commands.editModuleAccess, "args": [message, modules], "module": "global"},
         {"func": economy.punch, "args": [message], "module": "economy"}
-    ]
+        ]
     
     if message.content.startswith("/"):
         await commands.checkServer(message)
