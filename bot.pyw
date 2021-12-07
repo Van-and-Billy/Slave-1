@@ -21,9 +21,6 @@ casino = casino.Casino()
 
 class commands:
     
-    def __init__(self):
-        self.niggers: int = 0
-    
     @staticmethod
     async def info(message):
         await client.wait_until_ready()
@@ -130,9 +127,6 @@ class commands:
 
 class economyInfo:
     
-    def __init__(self):
-        self.nigger: int = 0
-    
     @staticmethod
     def userForm(userId: int):
         form = {"userId": userId, "stats": {"exp": 0, "money": 0, "bank": 0}}
@@ -202,9 +196,6 @@ class economyInfo:
 
 
 class economy:
-    
-    def __init__(self):
-        self.nigger: int = 0
     
     @staticmethod
     async def punch(message, user):
