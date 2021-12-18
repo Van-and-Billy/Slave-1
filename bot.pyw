@@ -1,3 +1,5 @@
+import os
+import json
 import main
 import commands
 import economy
@@ -6,7 +8,6 @@ import sys
 import discord
 # import asyncio
 # import uuid
-from config import token
 
 client = discord.Client()
 main = main.main()
@@ -26,7 +27,7 @@ BOT_COMMANDS = [
 @client.event
 async def on_ready():
     # print(f' bot started during {round(timeEvents.getTime(), 2)} sec')
-    main.getServersInfo()
+    print(main.getServersInfo())
 
 
 async def checkMessage(message, messages, command):
@@ -46,17 +47,22 @@ async def checkMessage(message, messages, command):
                     await command["func"](message, *(command["args"]), data=data)
                 else:
                     await command["func"](message, *(command["args"]))
-    
-    
+
+
 @client.event
 async def on_message(message):
-    
     if message.author == client.user:
         return
-
+    
     if message.content.startswith("/"):
         await client.wait_until_ready()
         await checkMessage(message=message, messages=BOT_MESSAGES, command=BOT_COMMANDS)
-    
-    
-client.run(token)
+
+
+def getToken():
+    with open(os.getcwd() + "/config.json", "r+", encoding='utf-8') as file:
+        config = json.loads((file.readlines())[0])
+    return config["token"]
+
+
+client.run(getToken())

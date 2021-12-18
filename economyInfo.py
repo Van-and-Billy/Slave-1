@@ -8,20 +8,19 @@ class economyInfo:
         self.path = "Servers"
     
     @staticmethod
-    def userForm(userId: int):
+    def userForm(userId: int) -> dict:
         form = {"userId": userId, "stats": {"exp": 0, "money": 0, "bank": 0}}
         return form
     
-    @staticmethod
-    async def checkServer(serverId: int):
+    async def checkServer(self, serverId: int):
         try:
-            with open(os.getcwd() + f"/Servers/{serverId}.json", "r+", encoding="utf-8") as server:
+            with open(os.getcwd() + f"/{self.path}/{serverId}.json", "r+", encoding="utf-8") as server:
                 users = json.loads((server.readlines())[0])
             return users
         except FileNotFoundError:
-            with open(os.getcwd() + f"/Servers/{serverId}.json", "a+", encoding="utf-8") as server:
+            with open(os.getcwd() + f"/{self.path}/{serverId}.json", "a+", encoding="utf-8") as server:
                 server.write(json.dumps([{"userId": 877116735092838421, "stats": {"exp": 0, "money": 0, "bank": 0}}]))
-            return await economyInfo.checkServer(serverId)
+            return await economyInfo.checkServer(self, serverId)
     
     @staticmethod
     def serverUsers(users: list) -> list:
@@ -30,28 +29,25 @@ class economyInfo:
             serverUsersIds.append(x["userId"])
         return serverUsersIds
     
-    @staticmethod
-    async def checkUser(serverId: int, userId: int):
-        users = await economyInfo.checkServer(serverId)
+    async def checkUser(self, serverId: int, userId: int):
+        users = await economyInfo.checkServer(self, serverId)
         ids = economyInfo.serverUsers(users)
         if not (userId in ids):
-            with open(os.getcwd() + f"/Servers/{serverId}.json", "w+", encoding="utf-8") as server:
+            with open(os.getcwd() + f"/{self.path}/{serverId}.json", "w+", encoding="utf-8") as server:
                 form = economyInfo.userForm(userId)
                 users.append(form)
                 server.write(json.dumps(users))
-            return await economyInfo.checkUser(serverId, userId)
+            return await economyInfo.checkUser(self, serverId, userId)
         else:
             return True
     
-    @staticmethod
-    async def getUserStats(userId: int, serverId: int):
-        users = await economyInfo.checkServer(serverId)
+    async def getUserStats(self, userId: int, serverId: int):
+        users = await economyInfo.checkServer(self, serverId)
         ids = economyInfo.serverUsers(users)
         return users[(ids.index(userId))]
     
-    @staticmethod
-    async def editUserStats(userId: int, serverId: int, exp: int = None, money: int = None, bank: int = None):
-        users = await economyInfo.checkServer(serverId)
+    async def editUserStats(self, userId: int, serverId: int, exp: int = None, money: int = None, bank: int = None):
+        users = await economyInfo.checkServer(self, serverId)
         ids = economyInfo.serverUsers(users)
         data = [exp, money, bank]
         names = ["exp", "money", "bank"]
@@ -71,6 +67,6 @@ class economyInfo:
             "stats": newstats
         }
         users[ids.index(userId)] = newdata
-        with open(os.getcwd() + f"/Servers/{serverId}.json", "w+", encoding="utf-8") as server:
+        with open(os.getcwd() + f"/{self.path}/{serverId}.json", "w+", encoding="utf-8") as server:
             server.write(json.dumps(users))
             
