@@ -6,10 +6,12 @@ class economyInfo:
     
     def __init__(self):
         self.path = "Servers"
+        self.DEV = [455990052338794497, 764516986012303361]
     
-    @staticmethod
-    def userForm(userId: int) -> dict:
-        form = {"userId": userId, "stats": {"exp": 0, "money": 0, "bank": 0}}
+    def userForm(self, userId: int) -> dict:
+        form = {"userId": userId,
+                "mod": userId in self.DEV,
+                "stats": {"exp": 0, "money": 0, "bank": 0}}
         return form
     
     async def checkServer(self, serverId: int):
@@ -19,7 +21,7 @@ class economyInfo:
             return users
         except FileNotFoundError:
             with open(os.getcwd() + f"/{self.path}/{serverId}.json", "a+", encoding="utf-8") as server:
-                server.write(json.dumps([{"userId": 877116735092838421, "stats": {"exp": 0, "money": 0, "bank": 0}}]))
+                server.write(json.dumps([{"userId": 877116735092838421, "mod": True, "stats": {"exp": 0, "money": 0, "bank": 0}}]))
             return await economyInfo.checkServer(self, serverId)
     
     @staticmethod
@@ -34,7 +36,7 @@ class economyInfo:
         ids = economyInfo.serverUsers(users)
         if not (userId in ids):
             with open(os.getcwd() + f"/{self.path}/{serverId}.json", "w+", encoding="utf-8") as server:
-                form = economyInfo.userForm(userId)
+                form = economyInfo.userForm(self, userId)
                 users.append(form)
                 server.write(json.dumps(users))
             return await economyInfo.checkUser(self, serverId, userId)
@@ -64,6 +66,7 @@ class economyInfo:
                 newstats[names[x]] = user["stats"][names[x]] + data[x]
         newdata = {
             "userId": userId,
+            "mod": userId in self.DEV,
             "stats": newstats
         }
         users[ids.index(userId)] = newdata
