@@ -34,7 +34,7 @@ class Casino:
             return [-bet, real_number]
     
     @staticmethod
-    def slots(bet: int) -> list:
+    def slots(bet: int, value: int) -> list:
         n = [random.randint(1, 9), random.randint(1, 9), random.randint(1, 9)]
         if n[0] == n[1] == n[2] and n[0] != 7:
             return [round(bet * 10) - bet, n]

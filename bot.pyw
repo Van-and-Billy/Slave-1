@@ -5,6 +5,7 @@ import commands
 import economy
 import economyInfo
 import sys
+import casino
 import discord
 # import asyncio
 # import uuid
@@ -14,14 +15,15 @@ main = main.main()
 economy = economy.economy()
 economyInfo = economyInfo.economyInfo()
 commands = commands.commands()
+casino = casino.Casino()
 
-ECONOMY_CASINO = ["/punch"]
 BOT_MODULES = ["economy"]
-BOT_MESSAGES = ["/help", "/moduleAccess", "/punch", "/balance"]
+BOT_MESSAGES = ["/help", "/moduleAccess", "/punch", "/slots", "/balance"]
 BOT_COMMANDS = [
     {"func": commands.help, "args": [], "module": "global"},
     {"func": commands.editModuleAccess, "args": [BOT_MODULES], "module": "global"},
-    {"func": economy.punch, "args": [], "module": "economy"},
+    {"func": economy.game, "args": [casino.punch], "module": "economy"},
+    {"func": economy.game, "args": [casino.slots], "module": "economy"},
     {"func": economy.balance, "args": [], "module": "economy"}
 ]
 
@@ -32,21 +34,16 @@ async def on_ready():
     print(main.getServersInfo())
 
 
-async def checkMessage(message, messages, command, casino):
+async def checkMessage(message, messages, command):
     data = await commands.checkServer(message, main.getServersInfo())
     serverId = message.channel.guild.id
     userId = message.author.id
     if (message.content.split(" ")[0]) in messages:
-        i = messages.index((message.content.split(" ")[0]))
-        command = command[i]
+        command = command[messages.index((message.content.split(" ")[0]))]
         if await commands.commandAccess(message, command["module"], data):
-            if command["module"] == "economy" and (await economyInfo.checkUser(serverId=serverId, userId=userId)):
+            if command["module"] == "economy" and await economyInfo.checkUser(serverId=serverId, userId=userId):
                 user = await economyInfo.getUserStats(serverId=serverId, userId=userId)
-                if message.content.split(" ")[0] in casino:
-                    result = await command["func"](*(command["args"]), user=user, message=message)
-                    await economyInfo.editUserStats(serverId=serverId, userId=userId, money=result[0])
-                else:
-                    await command["func"](message=message, user=user)
+                await command["func"](message, user, *(command["args"]))
             else:
                 if message.content.startswith("/moduleAccess"):
                     await command["func"](message, *(command["args"]), data=data)
@@ -61,7 +58,7 @@ async def on_message(message):
     
     if message.content.startswith("/"):
         await client.wait_until_ready()
-        await checkMessage(message=message, messages=BOT_MESSAGES, command=BOT_COMMANDS, casino=ECONOMY_CASINO)
+        await checkMessage(message=message, messages=BOT_MESSAGES, command=BOT_COMMANDS)
 
 
 def getToken():

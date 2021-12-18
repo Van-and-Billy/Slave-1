@@ -1,26 +1,32 @@
 import casino
 import discord
+import economyInfo
 
-casino = casino.Casino()
+economyInfo = economyInfo.economyInfo()
 
 
 class economy:
     
     @staticmethod
-    async def punch(message, user):
+    def condition(user, bet):
+        return ((bet >= 50) and (user["stats"]["money"]) >= bet) or user["mod"]
+    
+    @staticmethod
+    async def game(message, user, game):
+        serverId = message.channel.guild.id
+        userId = message.author.id
         mes = message.content.split(" ")
         try:
-            if ((int(mes[1]) >= 50) and (user["stats"]["money"]) >= int(mes[1])) or user["mod"]:
-                result = casino.punch(bet=int(mes[1]), power=int(mes[2]))
+            bet = int(mes[1])
+            value = int(mes[2])
+            if economy.condition(user=user, bet=bet):
+                result = game(bet, value)
                 await message.channel.send(result)
-                return result
-            else:
-                return [0, 0]
+                await economyInfo.editUserStats(serverId=serverId, userId=userId, money=result[0])
         except:
-            return [0, 0]
+            pass
 
     @staticmethod
     async def balance(message, user):
         money = user["stats"]["money"]
         return await message.channel.send(f"Баланс <@{user['userId']}>: {money}$")
-    
